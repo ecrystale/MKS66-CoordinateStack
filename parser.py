@@ -59,8 +59,7 @@ See the file script for an example of the file format
 """
 ARG_COMMANDS = [ 'box', 'sphere', 'torus', 'circle', 'bezier', 'hermite', 'line', 'scale', 'move', 'rotate', 'save' ]
 
-def parse_file( fname, edges, polygons, csystems, screen, color ):
-
+def parse_file( fname, edges, polygons, csystems, screen, color ):    
     f = open(fname)
     lines = f.readlines()
 
@@ -82,6 +81,13 @@ def parse_file( fname, edges, polygons, csystems, screen, color ):
                        float(args[0]), float(args[1]), float(args[2]),
                        float(args[3]), step_3d)
 
+        elif line == 'push':
+            copy=[a[:] for a in csystems[-1]]
+            csystems.append(copy)
+
+        elif line == "pop":
+            del csystems[-1]
+            
         elif line == 'torus':
             #print 'TORUS\t' + str(args)
             add_torus(polygons,
@@ -119,12 +125,12 @@ def parse_file( fname, edges, polygons, csystems, screen, color ):
         elif line == 'scale':
             #print 'SCALE\t' + str(args)
             t = make_scale(float(args[0]), float(args[1]), float(args[2]))
-            matrix_mult(t, transform)
+            matrix_mult(t, csystems)
 
         elif line == 'move':
             #print 'MOVE\t' + str(args)
             t = make_translate(float(args[0]), float(args[1]), float(args[2]))
-            matrix_mult(t, transform)
+            matrix_mult(t, csystems)
 
         elif line == 'rotate':
             #print 'ROTATE\t' + str(args)
@@ -136,14 +142,14 @@ def parse_file( fname, edges, polygons, csystems, screen, color ):
                 t = make_rotY(theta)
             else:
                 t = make_rotZ(theta)
-            matrix_mult(t, transform)
+            matrix_mult(t, csystems[-1])
 
         elif line == 'ident':
-            ident(transform)
+            ident(csystems)
 
         elif line == 'apply':
-            matrix_mult( transform, edges )
-            matrix_mult( transform, polygons )
+            matrix_mult( csystems[-1], edges )
+            matrix_mult( csystems[-1], polygons )
 
         elif line == 'clear':
             edges = []
